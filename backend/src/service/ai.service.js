@@ -5,9 +5,3 @@ const model = new ChatGoogleGenerativeAI({
   apiKey:process.env.GOOGLE_API_KEY
 });
 
-export async function testAi() {
-    model.invoke("what is the capital of INDIA")
-    .then((res)=>{
-        console.log(res.text)
-    })
-}
