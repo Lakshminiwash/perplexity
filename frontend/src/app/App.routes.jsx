@@ -1,8 +1,8 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Login from "../features/auth/pages/Login.jsx";
 import Register from "../features/auth/pages/Register.jsx";
 import Protected from "../features/auth/component/Protected.jsx";
-import Dashboard from "../features/auth/pages/Dashboard.jsx";
+import Dashboard from "../features/chat/pages/Dashboard.jsx";
 
 
 export const router = createBrowserRouter([
@@ -18,6 +18,10 @@ export const router = createBrowserRouter([
         element: <Protected>
             <Dashboard />
         </Protected>
+    },
+    {
+        path:"/dashboard",
+        element:<Navigate to="/" replace/>
     }
 
 ])
