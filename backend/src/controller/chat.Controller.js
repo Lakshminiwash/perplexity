@@ -41,7 +41,7 @@ export async function sendMessage(req, res) {
 export async function getChats(req, res) {
     const user = req.user
 
-    const chats = await userModal.find({ user: user.id })
+    const chats = await chatModel.find({ user: user.id })
     res.status(200).json({
         message: "Chats retrieved successfully",
         chats

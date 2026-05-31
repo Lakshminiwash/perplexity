@@ -10,7 +10,7 @@ chatRouter.post("/message",authUser,sendMessage)
 // /api/chat
 chatRouter.get("/",authUser,getChats)
 
-// /api/chat/getMessages 
+// /api/chat 
 chatRouter.get("/:chatId/messages",authUser,getMessages)
 
 // /api/chat/deleteChat
