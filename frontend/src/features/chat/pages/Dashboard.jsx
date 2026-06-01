@@ -2,6 +2,7 @@ import React from 'react'
 import ReactMarkdown from "react-markdown"
 import { useDispatch, useSelector } from 'react-redux'
 import { useChat } from '../hooks/useChat'
+import { useAuth } from '../../auth/hook/useAuth'
 import { useEffect } from 'react'
 import { useState } from 'react'
 import { setCurrentChatId } from '../chat.slice'
@@ -11,6 +12,7 @@ import remarkGfm from "remark-gfm"
 
 const Dashboard = () => {
   const chat = useChat()
+  const {handleLogout} = useAuth()
   const { handleDeleteChat } = useChat()
   const dispatch = useDispatch()
 
@@ -129,8 +131,8 @@ const Dashboard = () => {
               <p className='text-sm'>{newUser}</p>
             </div>
             <i
-            onClick={()=>console.log("clicked")}
-             className="ri-shut-down-line px-2 cursor-pointer hover:text-gray-300 text-gray-500"></i>
+            onClick={handleLogout}
+             className="ri-shut-down-line px-2 cursor-pointer active:scale-[.95] hover:text-gray-300 text-gray-500"></i>
           </button>
         </div>
 

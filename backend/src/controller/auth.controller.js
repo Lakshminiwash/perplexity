@@ -51,22 +51,22 @@ export async function register(req, res) {
     })
 }
 
-export async function login(req,res) {
+export async function login(req, res) {
 
-    const { email, password} = req.body
+    const { email, password } = req.body
 
-    const user = await userModal.findOne({email})
+    const user = await userModal.findOne({ email })
 
-    if(!user){
+    if (!user) {
         return res.status(400).json({
-            message:"invalid email or password",
-            success:false,
-            err:"user not found"
+            message: "invalid email or password",
+            success: false,
+            err: "user not found"
         })
     }
 
     const isPasswordMatch = await user.comparePassword(password)
-      if (!isPasswordMatch) {
+    if (!isPasswordMatch) {
         return res.status(400).json({
             message: "Invalid email or password",
             success: false,
@@ -74,20 +74,20 @@ export async function login(req,res) {
         })
     }
 
-    if(!user.verified){
+    if (!user.verified) {
         return res.status(400).json({
-            message:"please verify your email before logging in",
-            success:false,
-            err:"email is not verified"
+            message: "please verify your email before logging in",
+            success: false,
+            err: "email is not verified"
         })
     }
 
     const token = jwt.sign({
-        id:user._id,
-        username:user.username
-    },process.env.JWT_SECRET,{expiresIn:"7d"})
+        id: user._id,
+        username: user.username
+    }, process.env.JWT_SECRET, { expiresIn: "7d" })
 
-    res.cookie("token",token)
+    res.cookie("token", token)
 
     res.status(200).json({
         message: "Login successful",
@@ -100,7 +100,7 @@ export async function login(req,res) {
     })
 }
 
-export async function getMe(req,res) {
+export async function getMe(req, res) {
 
     const userId = req.user.id
 
@@ -121,13 +121,12 @@ export async function getMe(req,res) {
     })
 }
 
-export async function verify(req,res) {
+export async function verify(req, res) {
 
-    const {token} = req.query
-
+    const { token } = req.query
     try {
-        const decoded = jwt.verify(token,process.env.JWT_SECRET)
-        const user = await userModal.findOne({email:decoded.email})
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const user = await userModal.findOne({ email: decoded.email })
 
         if (!user) {
             return res.status(400).json({
@@ -147,7 +146,7 @@ export async function verify(req,res) {
         <a href="http://localhost:5173/login">Go to Login</a>
     `
 
-    return res.send(html)
+        return res.send(html)
     } catch (err) {
         return res.status(400).json({
             message: "Invalid or expired token",
@@ -157,6 +156,12 @@ export async function verify(req,res) {
     }
 }
 
-export async function logout(req,res) {
-    
+export async function logout(req, res) {
+    const { token } = req.query
+
+    res.clearCookie("token")
+    return res.status(200).json({
+        success: true,
+        message: "Logged out successfully"
+    })
 }
