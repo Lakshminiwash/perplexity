@@ -1,22 +1,49 @@
 import React from 'react'
 import ReactMarkdown from "react-markdown"
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useChat } from '../hooks/useChat'
 import { useEffect } from 'react'
 import { useState } from 'react'
+import { setCurrentChatId } from '../chat.slice'
+import remarkGfm from "remark-gfm"
+
+// component ke andar
 
 const Dashboard = () => {
   const chat = useChat()
+  const { handleDeleteChat } = useChat()
+  const dispatch = useDispatch()
+
 
   const [chatInput, setChatInput] = useState("")
+  const [highlightChat, setHighlightChat] = useState(null)
 
   const chats = useSelector((state) => state.chat.chats)
+  const user = useSelector((state) => state.auth.user.username)
+  const userEmail = useSelector((state) => state.auth.user.email)
+  const isLoading = useSelector((state) => state.chat.isLoading)
+
+  const firstLetterOfUser = userEmail.charAt(0).toUpperCase()
+  const newUser = user.charAt(0).toUpperCase() + user.slice(1)
+
   const currentChatId = useSelector((state) => state.chat.currentChatId)
 
+
   useEffect(() => {
-    chat.initializeSocketConnection()
-    chat.handleGetChats()
-  }, [])
+    async function init() {
+      chat.initializeSocketConnection()
+      await chat.handleGetChats()          // pehle chats load karo
+      if (currentChatId) {
+        await chat.handleOpenchat(currentChatId)  // phir messages
+      }
+    }
+    init()
+  }, [])  // currentChatId ko dependency mein mat daalo — sirf mount pe chalega
+
+  useEffect(() => {
+    setHighlightChat(currentChatId)
+    openChat(currentChatId)
+  }, [currentChatId])
 
   const handleSubmitMessage = (e) => {
     e.preventDefault()
@@ -31,7 +58,7 @@ const Dashboard = () => {
   }
 
   const openChat = (chatId) => {
-    chat.handleOpenchat(chatId)
+    chat.handleOpenchat(chatId, chats)
   }
 
 
@@ -47,58 +74,92 @@ const Dashboard = () => {
         <div className="flex items-center justify-between px-4 py-[18px] border-b border-[#2a2a2a]">
           <span className="text-[15px] font-semibold tracking-tight">Perplexity</span>
           <div className="w-[30px] h-[30px] rounded-full bg-[#d4a853] flex items-center justify-center text-[12px] font-semibold text-[#1a1200] select-none">
-            A
+            {firstLetterOfUser}
           </div>
         </div>
 
         {/* Chat list */}
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-          {Object.values(chats).map((chat, i) => (
-            <button key={i} onClick={() => { openChat(chat.id) }} type="button"
-              className={`w-full text-left rounded-[10px] px-3 py-2 cursor-pointer text-[12.5px] truncate border ${i === 0
+
+          {/* New chat */}
+          <div className="px-0 py-3">
+            <button
+              type="button"
+              onClick={() => {
+                dispatch(setCurrentChatId(null))
+                setHighlightChat(null)
+              }}
+              className='w-full'>
+              <div className="w-full flex items-center cursor-pointer gap-2 rounded-[10px] px-3 py-[9px] text-[12px] text-[#666] border border-[#2a2a2a]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                New chat
+              </div>
+            </button>
+          </div>
+
+
+
+          <p className='ml-2 text-xs text-gray-400 my-1 mb-3'>Chat history</p>
+          {Object.values(chats).reverse().map((chat, i) => (
+            <button key={i} onClick={() => {
+              openChat(chat.id)
+              setHighlightChat(chat.id)
+            }} type="button"
+              className={`w-full text-left rounded-[10px] px-3 py-2 cursor-pointer flex justify-between text-[12.5px] truncate border ${highlightChat === chat.id
                 ? "bg-[#1a1a1a] border-[#2a2a2a] text-[#e8e6e0]"
                 : "bg-transparent border-transparent text-[#666]"
                 }`}>
               {chat.title}
+              <i
+                onClick={() => handleDeleteChat(chat.id)}
+                className="ri-delete-bin-line hover:text-gray-300 cursor-pointer"></i>
             </button>
           ))}
         </div>
 
-        {/* New chat */}
+        {/* {user}  */}
         <div className="px-2 py-3 border-t border-[#2a2a2a]">
-          <div className="w-full flex items-center gap-2 rounded-[10px] px-3 py-[9px] text-[12px] text-[#666] border border-[#2a2a2a]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            New chat
-          </div>
+          <button className='w-full flex '>
+            <div className="w-full flex items-center gap-3 rounded-[10px] px-3 text-[12px] text-[#666]">
+              <div className="w-[20px] h-[20px] rounded-full bg-[#d4a853] flex items-center justify-center text-[12px] font-semibold text-[#1a1200] select-none">
+                {firstLetterOfUser}
+              </div>
+              <p className='text-sm'>{newUser}</p>
+            </div>
+            <i
+            onClick={()=>console.log("clicked")}
+             className="ri-shut-down-line px-2 cursor-pointer hover:text-gray-300 text-gray-500"></i>
+          </button>
         </div>
+
       </aside>
 
       {/* ── Main ── */}
       <main className="flex flex-col flex-1 min-w-0 bg-[#0a0a0a]">
 
-        {/* Top bar */}
-        <div className="flex items-center gap-3 px-5 py-[20px] border-b border-[#2a2a2a] bg-[#111111] shrink-0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round">
-            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-          <span className="text-[13.5px] font-medium truncate">What is quantum computing</span>
-        </div>
-
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-55 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden px-55 py-6 space-y-6">
 
           <div className='messages flex-1 space-y-3 overflow-y-auto pr-1 pb-30'>
-            {chats[currentChatId]?.messages.map((message) => (
+
+            {!currentChatId && (
+              <div className="flex items-center justify-center text-center mt-50">
+                <div className='flex flex-col gap-2'>
+                  <i className="ri-perplexity-line text-5xl font-thin"></i>
+                  <p className="text-3xl font-medium text-[#e8e6e0]">What do you want to know?</p>
+                  <p className="text-1xl text-[#555]">Ask anything — I'll find the answer.</p>
+                </div>
+              </div>
+            )}
+
+            {chats[currentChatId]?.messages.map((message, i) => (
               <div
-                key={message.id}
+                key={i}
                 className={`max-w-[82%] w-fit rounded-2xl px-4 py-3 text-sm md:text-base ${message.role === 'user'
                   ? 'ml-auto rounded-br-none bg-white/12 text-white'
-                  : 'mr-auto border border-white/25 bg-[#0f1626] text-white/90'
+                  : 'mr-auto text-white/90'
                   }`}
               >
                 {message.role === 'user' ? (
@@ -112,32 +173,51 @@ const Dashboard = () => {
                       code: ({ children }) => <code className='rounded bg-white/10 px-1 py-0.5'>{children}</code>,
                       pre: ({ children }) => <pre className='mb-2 overflow-x-auto rounded-xl bg-black/30 p-3'>{children}</pre>
                     }}
+                    remarkPlugins={[remarkGfm]}
                   >
                     {message.content}
-                  </ReactMarkdown>
-                )}              </div>
+                  </ReactMarkdown>)}
+              </div>
             ))}
-          </div>
-          {/* User message */}
-          {/* <div className="flex justify-end">
-            <div className="max-w-[68%] bg-[#1e1e1e] border border-[#2a2a2a] rounded-[14px] rounded-br-[4px] px-4 py-[10px]">
-              <p className="text-[13.5px] text-[#e8e6e0] leading-[1.55]">What is quantum computing and how does it differ from classical computing?</p>
-            </div>
-          </div>
 
-          ai message
-          <div className="flex justify-start gap-[10px] items-start">
-            <div className="w-[26px] h-[26px] min-w-[26px] rounded-full bg-[#d4a853] flex items-center justify-center mt-[2px]">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a1200" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5z" />
-              </svg>
-            </div>
-            <div className="max-w-[72%] bg-[#151515] border border-[#2a2a2a] rounded-[4px] rounded-tr-[14px] rounded-br-[14px] rounded-bl-[14px] px-4 py-[10px]">
-              <p className="text-[13.5px] text-[#e8e6e0] leading-[1.6]">Quantum computing uses quantum bits (qubits) that can exist in superposition — simultaneously 0 and 1 — unlike classical bits. This allows quantum computers to process many possibilities at once.</p>
-            </div>
-          </div> */}
 
+            {/* AI thinking animation */}
+            {isLoading && (
+              <div className="mr-auto max-w-[82%] w-fit">
+                <div className="flex items-center gap-3 rounded-2xl px-4 py-3 bg-transparent">
+
+                  {/* Animated orb */}
+                  <div className="relative w-7 h-7 shrink-0">
+                    <div className="absolute inset-0 rounded-full bg-[#d4a853] opacity-20 animate-ping" />
+                    <div className="absolute inset-1 rounded-full bg-[#d4a853] opacity-60 animate-pulse" />
+                    <div className="absolute inset-2 rounded-full bg-[#d4a853]" />
+                  </div>
+
+                  {/* Thinking text with typewriter dots */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1 text-[13px] text-[#888]">
+                      <span>Thinking</span>
+                      <span className="flex gap-[3px] ml-1">
+                        <span className="w-[5px] h-[5px] rounded-full bg-[#d4a853] animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-[5px] h-[5px] rounded-full bg-[#d4a853] animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-[5px] h-[5px] rounded-full bg-[#d4a853] animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </span>
+                    </div>
+
+                    {/* Shimmer bar */}
+                    <div className="w-48 h-[6px] rounded-full bg-[#1e1e1e] overflow-hidden">
+                      <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-[#d4a853] to-transparent animate-[shimmer_1.5s_ease-in-out_infinite]" />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+
+
 
         {/* Input bar */}
         <div className="px-55 pb-1 pt-3 border-t border-[#2a2a2a] bg-[#111111] shrink-0">
@@ -153,7 +233,7 @@ const Dashboard = () => {
             <button
               type='submit'
               disabled={!chatInput.trim()}
-              className="w-9 h-9 rounded-lg bg-[#d4a853] flex items-center justify-center shrink-0">
+              className="w-9 h-9 rounded-lg cursor-pointer bg-[#d4a853] flex items-center justify-center shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1200" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
               </svg>

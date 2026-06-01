@@ -1,24 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useAuth } from "../hook/useAuth";
+import { useDispatch } from "react-redux";
+import { setError } from "../auth.slice";
 
 const Login = ()=> {
 
     const {handleLogin} = useAuth()
     const navigate = useNavigate()
 
+    const dispatch = useDispatch()
+
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [submit, setSubmit] = useState(false)
 
     const user = useSelector(state=>state.auth.user)
     const loading = useSelector(state=>state.auth.loading)
+    const error = useSelector(state =>state.auth.error)
+
+    useEffect(() => {
+           if (!submit) return
+           if(loading) return 
+           if(error){
+               alert(error.message)
+               return
+           }
+       }, [loading])
 
     const [showPassword, setShowPassword] = useState(false);
 
     const submitHandler = async(e) => {
         e.preventDefault()
-
+        setSubmit(true)
+        dispatch(setError(null))
         const payload = {
             email,password
         }
@@ -135,7 +151,7 @@ const Login = ()=> {
                         type="submit"
                         className="w-full py-2.5 bg-[#20808D] hover:bg-[#1a6e79] active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition"
                     >
-                        Sign in
+                    {loading? "signing in..." : "Sign in"}
                     </button>
                 </form>
 

@@ -1,29 +1,33 @@
 import { useDispatch } from "react-redux";
-import { setError, setLoading, setUser } from "../auth.slice";
+import { setValidationError,setError, setLoading, setUser } from "../auth.slice";
 import { getMe, login, register } from "../services/auth.api";
 
 export function useAuth() {
     const dispatch = useDispatch()
 
-    async function handleRegister({email,password,username}) {
+    async function handleRegister({ email, password, username }) {
         try {
             dispatch(setLoading(true))
-            const data = await register({email,password,username})
+            dispatch(setError(null))
+            dispatch(setValidationError([]))
+            await register({ email, password, username })
         } catch (error) {
-            dispatch(setError(error.response?.data?.message || "Registration failed"))
-        }finally{
+            dispatch(setError(error))
+            dispatch(setValidationError(error?.errors || error.response?.data?.message || "Registration failed"))
+        } finally {
             dispatch(setLoading(false))
         }
     }
 
-    async function handleLogin({email,password}) {
+    async function handleLogin({ email, password }) {
         try {
+            dispatch(setError(null))
             dispatch(setLoading(true))
-            const data = await login({email,password})
+            const data = await login({ email, password })
             dispatch(setUser(data.user))
         } catch (error) {
-            dispatch(setError(error.response?.data?.message || "login failed"))
-        }finally{
+            dispatch(setError(error || "login failed"))
+        } finally {
             dispatch(setLoading(false))
         }
     }
@@ -35,12 +39,12 @@ export function useAuth() {
             dispatch(setUser(data.user))
         } catch (error) {
             dispatch(setError(error.response?.data?.message || "Failed to fetch user data"))
-        }finally{
+        } finally {
             dispatch(setLoading(false))
         }
     }
 
-    return{
+    return {
         handleRegister,
         handleLogin,
         handleGetme

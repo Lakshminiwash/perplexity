@@ -16,4 +16,7 @@ authRouter.get("/getme",authUser,getMe)
 // /api/auth/verify-email 
 authRouter.get("/verify-email",verify)
 
+// /api/auth/logout 
+authRouter.post("/logOut",logout)
+
 export default authRouter

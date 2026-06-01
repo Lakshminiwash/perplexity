@@ -13,7 +13,7 @@ export function initSocket(httpServer) {
     console.log("socket.io server is running")
 
     io.on("connection",(socket)=>{
-            console.log("a user is connected" + socket.id)
+            console.log("a user is connected " + socket.id)
     })
 
     
