@@ -1,15 +1,18 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    service:"smtp.gmail.com",
-    port:"587",
-    secure:false,
+    service:"gmail",
     auth: {
         user: process.env.EMAIL_USER?.trim(),
         pass: process.env.EMAIL_PASS?.trim()
     }
 })
 
+console.log(transporter.options);
+console.log({
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASS_EXISTS: !!process.env.EMAIL_PASS
+});
 // Initialize transporter verification
 transporter.verify()
     .then(() => { console.log("✓ Email transporter is ready to send emails"); })
