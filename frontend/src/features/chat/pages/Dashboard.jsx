@@ -12,7 +12,7 @@ import remarkGfm from "remark-gfm"
 
 const Dashboard = () => {
   const chat = useChat()
-  const {handleLogout} = useAuth()
+  const { handleLogout } = useAuth()
   const { handleDeleteChat } = useChat()
   const dispatch = useDispatch()
 
@@ -131,8 +131,8 @@ const Dashboard = () => {
               <p className='text-sm'>{newUser}</p>
             </div>
             <i
-            onClick={handleLogout}
-             className="ri-shut-down-line px-2 cursor-pointer active:scale-[.95] hover:text-gray-300 text-gray-500"></i>
+              onClick={handleLogout}
+              className="ri-shut-down-line px-2 cursor-pointer active:scale-[.95] hover:text-gray-300 text-gray-500"></i>
           </button>
         </div>
 
