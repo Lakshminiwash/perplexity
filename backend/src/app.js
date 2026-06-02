@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use(morgan("dev"))
 app.use(cors({
-    origin:"https://perplexity-frontend-five.vercel.app/login",
+    origin:"https://perplexity-frontend-five.vercel.app",
     credentials:true,
     methods:["GET","POST","PUT","DELETE"],
 }))
