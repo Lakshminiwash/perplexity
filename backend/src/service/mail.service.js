@@ -8,11 +8,6 @@ const transporter = nodemailer.createTransport({
     }
 })
 
-console.log(transporter.options);
-console.log({
-  EMAIL_USER: process.env.EMAIL_USER,
-  EMAIL_PASS_EXISTS: !!process.env.EMAIL_PASS
-});
 // Initialize transporter verification
 transporter.verify()
     .then(() => { console.log("✓ Email transporter is ready to send emails"); })
