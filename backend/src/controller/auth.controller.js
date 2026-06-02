@@ -87,7 +87,11 @@ export async function login(req, res) {
         username: user.username
     }, process.env.JWT_SECRET, { expiresIn: "7d" })
 
-    res.cookie("token", token)
+    res.cookie("token", token, {
+        secure: true,
+        sameSite: "none",
+        httpOnly: true
+    })
 
     res.status(200).json({
         message: "Login successful",
