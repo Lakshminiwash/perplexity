@@ -1,10 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL:[
-        "https://perplexity-backend-8zm6.onrender.com",
-        "http://localhost:3000"
-    ],
+    baseURL: "http://localhost:3000",
     withCredentials:true
 })
 
@@ -17,7 +14,7 @@ export async function register({email,username,password}) {
     )
     return response.data
    } catch (error) {
-    throw error.response.data
+    throw error?.response?.data || { message: error.message || "Network error" }
    }
 }
 
@@ -28,7 +25,7 @@ export async function login({email,password}) {
     })
     return response.data
    } catch (error) {
-    throw error.response.data
+    throw error?.response?.data
    }
 }
 

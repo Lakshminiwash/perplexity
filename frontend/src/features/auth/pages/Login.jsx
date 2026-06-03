@@ -149,7 +149,7 @@ const Login = ()=> {
 
                     <button
                         type="submit"
-                        className="w-full py-2.5 bg-[#20808D] hover:bg-[#1a6e79] active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition"
+                        className="w-full py-2.5 bg-[#20808D] cursor-pointer hover:bg-[#1a6e79] active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition"
                     >
                     {loading? "signing in..." : "Sign in"}
                     </button>
