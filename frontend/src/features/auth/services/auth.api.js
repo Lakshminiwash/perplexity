@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL:"https://perplexity-backend-8zm6.onrender.com",
+    baseURL:[
+        "https://perplexity-backend-8zm6.onrender.com",
+        "http://localhost:3000"
+    ],
     withCredentials:true
 })
 

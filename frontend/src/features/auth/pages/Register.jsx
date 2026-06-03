@@ -20,23 +20,23 @@ export default function Register() {
     const user = useSelector((state) => state.auth.user)
     const loading = useSelector((state) => state.auth.loading)
     const validationError = useSelector((state) => state.auth.validationError)
-    const error = useSelector((state)=>state.auth.error)
+    const error = useSelector((state) => state.auth.error)
 
     useEffect(() => {
         if (!submitted) return
-        if(loading) return
+        if (loading) return
         if (Array.isArray(validationError) && validationError.length > 0) {
-             const errorMessage = validationError
-            .map(element => element.msg)
-            .join("\n")
+            const errorMessage = validationError
+                .map(element => element.msg)
+                .join("\n")
             alert(errorMessage)
             return
-        } 
-        if(error){
-            alert(error.message)
+        }
+        if (error) {
+            alert(typeof error === 'string' ? error : error.message || "Registration failed")          
             return
         }
-        alert("Go to the Gmail and verify") 
+        alert("Registration successful! Check your Gmail to verify.")
     }, [loading])
 
     const navigate = useNavigate()
@@ -46,15 +46,18 @@ export default function Register() {
     const submitHandler = async (e) => {
         e.preventDefault()
 
-        setSubmitted(true)
         dispatch(setValidationError([]))
+        setSubmitted(true)
         dispatch(setError(null))
         const payload = {
             username,
             email,
             password,
         }
-        await handleRegister(payload)
+        const success = await handleRegister(payload)
+        if (success) {
+        alert("Registration successful! Check your Gmail to verify.")
+    }
     }
 
     if (!loading && user) {
@@ -190,7 +193,7 @@ export default function Register() {
                         type="submit"
                         className="w-full cursor-pointer py-2.5 bg-[#20808D] hover:bg-[#1a6e79] active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition"
                     >
-                        {loading? "creating...":"Create account"}
+                        {loading ? "creating..." : "Create account"}
                     </button>
 
                 </form>

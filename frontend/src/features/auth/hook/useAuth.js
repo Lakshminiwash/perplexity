@@ -12,8 +12,8 @@ export function useAuth() {
             dispatch(setValidationError([]))
             await register({ email, password, username })
         } catch (error) {
-            dispatch(setError(error))
-            dispatch(setValidationError(error?.errors || error.response?.data?.message || "Registration failed"))
+            dispatch(setError(error || "registration failed"))
+            dispatch(setValidationError(error?.errors || error.response?.data?.message || []))
         } finally {
             dispatch(setLoading(false))
         }
