@@ -11,15 +11,6 @@ import { fileURLToPath } from "url"
 
 const app = express();
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-app.use(express.static(path.join(__dirname, "../frontend/dist")))
-
-app.get("{*path}", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"))
-})
-
 app.use(cors({
     origin:"http://localhost:5173",
     credentials:true,
