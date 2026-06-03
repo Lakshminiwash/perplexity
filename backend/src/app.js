@@ -9,15 +9,21 @@ import axios from "axios"
 
 const app = express();
 
+app.use(cors({
+    origin:[
+        "https://perplexity-frontend-five.vercel.app",
+        "http://localhost:5173"
+    ],
+    credentials:true,
+    methods:["GET","POST","PUT","DELETE","OPTIONS",],
+}))
+
+app.options("{*path}",cors())
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use(morgan("dev"))
-app.use(cors({
-    origin:"https://perplexity-frontend-five.vercel.app",
-    credentials:true,
-    methods:["GET","POST","PUT","DELETE"],
-}))
 
 // ✅ Health check route
 app.get("/api/health", (req, res) => {
