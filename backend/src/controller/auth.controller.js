@@ -87,11 +87,7 @@ export async function login(req, res) {
         username: user.username
     }, process.env.JWT_SECRET, { expiresIn: "7d" })
 
-    res.cookie("token", token, {
-        secure: true,
-        sameSite: "none",
-        httpOnly: true
-    })
+    res.cookie("token", token)
 
     res.status(200).json({
         message: "Login successful",
@@ -147,7 +143,7 @@ export async function verify(req, res) {
             `
         <h1>Email Verified Successfully!</h1>
         <p>Your email has been verified. You can now log in to your account.</p>
-        <a href="http://localhost:5173/login">Go to Login</a>
+        <a href="http://localhost:3000">Go to Login</a>
     `
 
         return res.send(html)
