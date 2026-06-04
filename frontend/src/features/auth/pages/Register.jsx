@@ -16,6 +16,7 @@ export default function Register() {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [submitted, setSubmitted] = useState(false)
+    const navigate = useNavigate()
 
     const user = useSelector((state) => state.auth.user)
     const loading = useSelector((state) => state.auth.loading)
@@ -30,16 +31,18 @@ export default function Register() {
                 .map(element => element.msg)
                 .join("\n")
             alert(errorMessage)
+            setSubmitted(false)
             return
         }
         if (error) {
             alert(typeof error === 'string' ? error : error.message || "Registration failed")          
+            setSubmitted(false)
             return
         }
-        alert("Registration successful! Check your Gmail to verify.")
-    }, [loading])
+        // Registration successful, redirect to dashboard
+        navigate("/")
+    }, [loading, submitted, validationError, error, navigate])
 
-    const navigate = useNavigate()
 
     const [showPassword, setShowPassword] = useState(false);
 
@@ -54,10 +57,7 @@ export default function Register() {
             email,
             password,
         }
-        const success = await handleRegister(payload)
-        if (success) {
-        alert("Registration successful! Check your Gmail to verify.")
-    }
+        await handleRegister(payload)
     }
 
     if (!loading && user) {
