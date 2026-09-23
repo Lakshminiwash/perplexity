@@ -8,8 +8,6 @@ import cors from "cors";
 import chatRouter from "./router/chatRoutes.js";
 import cron from "node-cron"
 import axios from "axios"
-import path from "path"
-import { fileURLToPath } from "url"
 
 
 // CORS middleware configuration
@@ -23,7 +21,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 
-app.use(express.static("./public"))
+// app.use(express.static("./public"))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
@@ -38,14 +36,5 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth",authRouter)
 app.use("/api/chat",chatRouter)
 
-// ✅ Cron job
-cron.schedule("*/14 * * * *", async () => {
-    try {
-        await axios.get("http://localhost:3000/api/health")
-        console.log("Server pinged - staying awake")
-    } catch (error) {
-        console.log("Ping failed")
-    }
-})
 
 export default app
