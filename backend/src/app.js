@@ -11,7 +11,7 @@ import axios from "axios"
 
 
 const corsOptions = {
-    origin:"http://localhost:5173",
+    origin:"https://perplexity-liart.vercel.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
