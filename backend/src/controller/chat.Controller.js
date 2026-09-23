@@ -23,7 +23,14 @@ export async function sendMessage(req, res) {
     })
 
     const messages = await messageModal.find({ chat: chatId || chat._id })
-    const result = await generateResponse(messages)
+
+    let result = "I couldn't generate a response right now. Please try again in a moment."
+
+    try {
+        result = await generateResponse(messages)
+    } catch (error) {
+        console.error("AI response generation failed:", error)
+    }
 
     const aiMessage = await messageModal.create({
         chat: chatId || chat._id,
