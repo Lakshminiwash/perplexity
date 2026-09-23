@@ -9,10 +9,23 @@ import chatRouter from "./router/chatRoutes.js";
 import cron from "node-cron"
 import axios from "axios"
 
+const allowedOrigins = [
+    "https://perplexity-kappa-brown.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    process.env.CLIENT_URL,
+    process.env.FRONTEND_URL,
+].filter(Boolean)
 
-// CORS middleware configuration
 const corsOptions = {
-    origin: "https://perplexity-kappa-brown.vercel.app",
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true)
+            return
+        }
+
+        callback(new Error("Not allowed by CORS"))
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
