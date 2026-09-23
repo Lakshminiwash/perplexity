@@ -6,23 +6,40 @@ import { generateChatTitle, generateResponse } from "../service/ai.service.js";
 export async function sendMessage(req, res) {
     const { message, chat: chatId } = req.body
 
-    let chat = null, title = null
+    let chat = null
+    let title = "New chat"
 
     if (!chatId) {
-        title = await generateChatTitle(message);
-        chat = await chatModel.create({
-            user: req.user.id,
-            title
-        })
+        try {
+            title = await generateChatTitle(message)
+        } catch (error) {
+            console.error("Chat title generation failed:", error)
+            title = "New chat"
+        }
+
+        try {
+            chat = await chatModel.create({
+                user: req.user.id,
+                title
+            })
+        } catch (error) {
+            console.error("Chat creation failed:", error)
+            return res.status(500).json({
+                success: false,
+                message: "Failed to create chat"
+            })
+        }
     }
 
+    const chatRefId = chatId || chat._id
+
     const userMessage = await messageModal.create({
-        chat: chatId || chat._id,
+        chat: chatRefId,
         content: message,
         role: "user",
     })
 
-    const messages = await messageModal.find({ chat: chatId || chat._id })
+    const messages = await messageModal.find({ chat: chatRefId })
 
     let result = "I couldn't generate a response right now. Please try again in a moment."
 
@@ -33,7 +50,7 @@ export async function sendMessage(req, res) {
     }
 
     const aiMessage = await messageModal.create({
-        chat: chatId || chat._id,
+        chat: chatRefId,
         content: result,
         role: "ai",
     })
