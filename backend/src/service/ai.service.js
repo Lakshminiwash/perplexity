@@ -1,77 +1,72 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ChatMistralAI } from "@langchain/mistralai";
-import { HumanMessage, SystemMessage } from "langchain";
+import { ChatMistralAI } from "@langchain/mistralai"
+import { HumanMessage, SystemMessage, AIMessage, tool, createAgent } from "langchain";
+import * as z from "zod";
+import { searchInternet } from "./internet.service.js";
 
-const model = new ChatGoogleGenerativeAI({
-  model: "gemini-1.5-flash",
-  apiKey: process.env.GOOGLE_API_KEY,
+const geminiModel = new ChatGoogleGenerativeAI({
+  model: "gemini-flash-latest",
+  apiKey: process.env.GEMINI_API_KEY
 });
 
-const mistralModal = new ChatMistralAI({
-  model: "mistral-small-latest",
-  apiKey: process.env.MISTRAL_API_KEY,
-});
+const mistralModel = new ChatMistralAI({
+  model: "ministral-3b-latest",
+  apiKey: process.env.MISTRAL_API_KEY
+})
 
-function buildLocalTitle(message) {
-  const clean = String(message || "").trim();
-  if (!clean) return "New chat";
+const searchInternetTool = tool(
+  searchInternet,
+  {
+    name: "searchInternet",
+    description: "Use this tool to get the latest information from the internet.",
+    schema: z.object({
+      query: z.string().describe("The search query to look up on the internet.")
+    })
+  }
+)
 
-  const words = clean.split(/\s+/).filter(Boolean);
-  const titleWords = words.slice(0, 4);
-  const title = titleWords.join(" ").slice(0, 40);
-
-  return title || "New chat";
-}
+const agent = createAgent({
+  model: mistralModel,
+  tools: [searchInternetTool],
+})
 
 export async function generateResponse(messages) {
-  if (!process.env.GOOGLE_API_KEY) {
-    throw new Error("GOOGLE_API_KEY is not configured");
-  }
+  console.log(messages)
 
-  try {
-    const history = (messages || [])
-      .filter((msg) => msg && typeof msg.content === "string")
-      .slice(-10)
-      .map((msg) => {
-        if (msg.role === "user" || msg.role === "ai") {
-          return new HumanMessage(msg.content);
+  const response = await agent.invoke({
+    messages: [
+      new SystemMessage(`
+                You are a helpful and precise assistant for answering questions.
+                If you don't know the answer, say you don't know. 
+                If the question requires up-to-date information, use the "searchInternet" tool to get the latest information from the internet and then answer based on the search results.
+            `),
+      ...(messages.map(msg => {
+        if (msg.role == "user") {
+          return new HumanMessage(msg.content)
+        } else if (msg.role == "ai") {
+          return new AIMessage(msg.content)
         }
-        return null;
-      })
-      .filter(Boolean);
+      }))]
+  });
 
-    const response = await model.invoke([
-      new SystemMessage(`You are a helpful, clear, and concise assistant. Answer the user's latest message based on the prior chat context. If you are unsure, say so honestly.`),
-      ...history,
-    ]);
+  return response.messages[response.messages.length - 1].text;
 
-    return typeof response?.text === "string"
-      ? response.text
-      : String(response?.content || "");
-  } catch (error) {
-    const message = (error?.message || "").toLowerCase();
-
-    if (message.includes("429") || message.includes("rate limit") || message.includes("too many requests")) {
-      return "The AI service is currently rate-limited. Please try again in a moment.";
-    }
-
-    throw error;
-  }
 }
 
 export async function generateChatTitle(message) {
-  try {
-    if (!process.env.MISTRAL_API_KEY) {
-      return buildLocalTitle(message);
-    }
 
-    const response = await mistralModal.invoke([
-      new SystemMessage(`You are a helpful assistant that generates concise and descriptive titles for chat conversations.`),
-      new HumanMessage(`Generate a title for a chat conversation based on the following first message: "${message}"`),
-    ]);
+  const response = await geminiModel.invoke([
+    new SystemMessage(`
+            You are a helpful assistant that generates concise and descriptive titles for chat conversations.
+            
+            User will provide you with the first message of a chat conversation, and you will generate a title that captures the essence of the conversation in 2-4 words. The title should be clear, relevant, and engaging, giving users a quick understanding of the chat's topic.    
+        `),
+    new HumanMessage(`
+            Generate a title for a chat conversation based on the following first message:
+            "${message}"
+            `)
+  ])
 
-    return response.text || buildLocalTitle(message);
-  } catch (error) {
-    return buildLocalTitle(message);
-  }
+  return response.text;
+
 }

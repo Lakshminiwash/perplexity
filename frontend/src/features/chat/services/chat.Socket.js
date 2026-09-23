@@ -4,7 +4,7 @@ let socket;
 
 export const initializeSocketConnection = () => {
     if (!socket) {
-        socket = io("https://perplexity-4d0u.onrender.com/", {
+        socket = io("http://localhost:3000/", {
             withCredentials: true,
             transports: ["websocket", "polling"],
             reconnection: true,

@@ -1,71 +1,52 @@
-import chatModel from "../modals/chat.modal.js";
-import messageModal from "../modals/message.modal.js";
-import userModal from "../modals/user.modal.js";
-import { generateChatTitle, generateResponse } from "../service/ai.service.js";
+import { generateResponse, generateChatTitle } from "../service/ai.service.js";
+import chatModel from "../modals/chat.modal.js"
+import messageModel from "../modals/message.modal.js";
 
 export async function sendMessage(req, res) {
-    const { message, chat: chatId } = req.body
 
-    let chat = null
-    let title = "New chat"
+    const { message, chat: chatId } = req.body;
+
+
+    let title = null, chat = null;
 
     if (!chatId) {
-        try {
-            title = await generateChatTitle(message)
-        } catch (error) {
-            console.error("Chat title generation failed:", error)
-            title = "New chat"
-        }
-
-        try {
-            chat = await chatModel.create({
-                user: req.user.id,
-                title
-            })
-        } catch (error) {
-            console.error("Chat creation failed:", error)
-            return res.status(500).json({
-                success: false,
-                message: "Failed to create chat"
-            })
-        }
+        title = await generateChatTitle(message);
+        chat = await chatModel.create({
+            user: req.user.id,
+            title
+        })
     }
 
-    const chatRefId = chatId || chat._id
-
-    const userMessage = await messageModal.create({
-        chat: chatRefId,
+    const userMessage = await messageModel.create({
+        chat: chatId || chat._id,
         content: message,
-        role: "user",
+        role: "user"
     })
 
-    const messages = await messageModal.find({ chat: chatRefId })
+    const messages = await messageModel.find({ chat: chatId || chat._id })
 
-    let result = "I couldn't generate a response right now. Please try again in a moment."
+    const result = await generateResponse(messages);
 
-    try {
-        result = await generateResponse(messages)
-    } catch (error) {
-        console.error("AI response generation failed:", error)
-    }
-
-    const aiMessage = await messageModal.create({
-        chat: chatRefId,
+    const aiMessage = await messageModel.create({
+        chat: chatId || chat._id,
         content: result,
-        role: "ai",
+        role: "ai"
     })
+
 
     res.status(201).json({
         title,
         chat,
         aiMessage
     })
+
 }
 
 export async function getChats(req, res) {
     const user = req.user
 
     const chats = await chatModel.find({ user: user.id })
+
     res.status(200).json({
         message: "Chats retrieved successfully",
         chats
@@ -73,7 +54,7 @@ export async function getChats(req, res) {
 }
 
 export async function getMessages(req, res) {
-    const { chatId } = req.params
+    const { chatId } = req.params;
 
     const chat = await chatModel.findOne({
         _id: chatId,
@@ -82,29 +63,30 @@ export async function getMessages(req, res) {
 
     if (!chat) {
         return res.status(404).json({
-            message: "chat not found"
+            message: "Chat not found"
         })
     }
 
-    const messages = await messageModal.find({
+    const messages = await messageModel.find({
         chat: chatId
     })
 
     res.status(200).json({
-        message: "messages received successfully",
+        message: "Messages retrieved successfully",
         messages
     })
 }
 
 export async function deleteChat(req, res) {
-    const { chatId } = req.params
+
+    const { chatId } = req.params;
 
     const chat = await chatModel.findOneAndDelete({
         _id: chatId,
         user: req.user.id
     })
 
-    await messageModal.deleteMany({
+    await messageModel.deleteMany({
         chat: chatId
     })
 

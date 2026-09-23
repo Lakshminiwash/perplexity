@@ -5,7 +5,7 @@ let io;
 export function initSocket(httpServer) {
     io = new Server(httpServer,{
         cors:{
-            origin:"https://perplexity-kappa-brown.vercel.app",
+            origin:"http://localhost:5173",
             credentials:true
         }
     })
